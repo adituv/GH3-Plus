@@ -10,6 +10,7 @@
 #pragma comment(lib,"Winmm.lib")
 
 static const LPVOID changeDetour = (LPVOID)0x00538EF0;
+static const LPVOID trackSpeedDetour = (LPVOID)0x004259A6;
 static const LPVOID gameFrameDetour = (LPVOID)0x005B0C50;
 static uint32_t changeSpeedStruct[] = { 0x00010000, 0xCDCDCDCD,
     0x00000500, 0x16D91BC1, 0x3F800000, 0x00000000 };
@@ -21,6 +22,7 @@ static uint32_t changePitchStruct[] = { 0x00010000, 0xCDCDCDCD,
 
 static float g_hackedSpeed = 1.0f;
 static float g_hackedPitch = 1.0f;
+static float g_trackSpeedMul = 1.0f;
 static int32_t g_currentInt = 100;
 static int32_t g_multiplier = 0;
 static bool g_keyHeld = false;
@@ -147,6 +149,7 @@ void applyNewSpeed(int32_t newSpeed)
         return;
     g_hackedSpeed = (float)(newSpeed / 100.0f);
     g_hackedPitch = 1.0f / g_hackedSpeed;
+    g_trackSpeedMul = g_hackedPitch;
     
     g_speedUpdated = 1;
 }
@@ -216,6 +219,20 @@ _declspec(naked) void checkKeysNaked()
     }
 }
 
+__declspec(naked) void setTrackSpeedNaked()
+{
+    static const uint32_t returnAddress = 0x004259AD;
+    static const uint32_t trackSpeedAddress = 0x00A12B90;
+    __asm
+    {
+		mov     eax, 0x8446DADC;
+		push    edi;
+		push    eax;
+        mulss   xmm0, g_trackSpeedMul;
+        jmp     returnAddress;
+    }
+}
+
 void ApplyHack()
 {
     // set up pointers within the changeX structs
@@ -227,4 +244,5 @@ void ApplyHack()
 
     g_patcher.WriteJmp(changeDetour, &changeOverrideNaked);
     g_patcher.WriteJmp(gameFrameDetour, &checkKeysNaked);
+    g_patcher.WriteJmp(trackSpeedDetour, &setTrackSpeedNaked);
 }
