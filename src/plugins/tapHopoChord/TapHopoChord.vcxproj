@@ -87,6 +87,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;TAPHOPOCHORD_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -98,7 +99,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="gemLoading.cpp" />
+    <ClCompile Include="gemMutation.cpp" />
+    <ClCompile Include="globalArrayReplacements.cpp" />
+    <ClCompile Include="noteLoading.cpp" />
+    <ClCompile Include="noteLogic.cpp" />
+    <ClCompile Include="gemConstants.cpp" />
     <ClCompile Include="tapHopoChord.cpp" />
+    <ClCompile Include="textureTakeover.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tapHopoChord.h" />
