@@ -1,8 +1,11 @@
+#define PITCHSHIFT
+
 #include "keyHijacker.h"
 #include "resource.h"
 #include "core\Patcher.h"
 #include "gh3\GH3Keys.h"
 #include "gh3\GH3GlobalAddresses.h"
+#include "gh3\QbStruct.h"
 #include <Windows.h>
 #include <mmsystem.h>
 #include <string>
@@ -12,10 +15,16 @@
 static const LPVOID changeDetour = (LPVOID)0x00538EF0;
 static const LPVOID trackSpeedDetour = (LPVOID)0x004259A6;
 static const LPVOID gameFrameDetour = (LPVOID)0x005B0C50;
-static uint32_t changeSpeedStruct[] = { 0x00010000, 0xCDCDCDCD,
-    0x00000500, 0x16D91BC1, 0x3F800000, 0x00000000 };
+static GH3::QbStruct changeSpeedStruct;
+static GH3::QbStructItem changeCurrentSpeedfactorItem;
 #ifdef PITCHSHIFT
-static uint32_t changePitchStruct[] = { 0x00010000, 0xCDCDCDCD,
+static GH3::QbStruct changePitchStruct;
+static GH3::QbStructItem changeStructureNameItem;
+static GH3::QbStructItem changePitchItem;
+#endif
+
+#ifdef PITCHSHIFT
+static uint32_t changePitchStruct2[] = { 0x00010000, 0xCDCDCDCD,
     0x00001B00, 0xFD2C9E38, 0x3370A847, 0xCDCDCDCD,
     0x00000500, 0xD8604126, 0x3F800000, 0x00000000 };
 #endif
@@ -235,11 +244,16 @@ __declspec(naked) void setTrackSpeedNaked()
 
 void ApplyHack()
 {
-    // set up pointers within the changeX structs
-    changeSpeedStruct[1] = (uint32_t) &changeSpeedStruct[2];
+	float onef = 1.0f;
+	uint32_t one = reinterpret_cast<uint32_t&>(onef);
+	changeCurrentSpeedfactorItem = GH3::QbStructItem(GH3::QbNodeFlags::QTypeFloat, KEY_CURRENT_SPEEDFACTOR, one);
+	changeSpeedStruct = GH3::QbStruct(&changeCurrentSpeedfactorItem);
+
 #ifdef PITCHSHIFT
-    changePitchStruct[1] = (uint32_t) &changePitchStruct[2];
-    changePitchStruct[5] = (uint32_t) &changePitchStruct[6];
+	changePitchItem = GH3::QbStructItem(GH3::QbNodeFlags::QTypeQbKeyRef, KEY_PITCH, one);
+	changeStructureNameItem = GH3::QbStructItem(GH3::QbNodeFlags::QTypeQbKeyRef, KEY_STRUCTURENAME, KEY_PITCHSHIFTSLOW1);
+	changeStructureNameItem.next = &changePitchItem;
+	changePitchStruct = GH3::QbStruct(&changeStructureNameItem);
 #endif
 
     g_patcher.WriteJmp(changeDetour, &changeOverrideNaked);
