@@ -16,7 +16,7 @@ std::map<std::string, std::pair<std::wstring, std::wstring>> songNames;
 
 void loadSongList();
 void loadPakDetourNaked();
-void loadPakDetour();
+void loadPakDetour(GH3::QbStruct*);
 
 void ApplyHack()
 {
@@ -83,6 +83,29 @@ __declspec(naked) void loadPakDetourNaked()
 	}
 }
 
-void __cdecl loadPakDetour(GH3::QbStruct args)
+void __cdecl loadPakDetour(GH3::QbStruct* args)
 {
+	auto item = args->GetItem(GH3::QbKey(0U), GH3::QbValueType::TypeCString);
+	if (item == nullptr)
+		return;
+
+	std::string pakPath = reinterpret_cast<char*>(item->value);
+	size_t pathLength = pakPath.length();
+	
+	std::string prefix = pakPath.substr(0, 6);
+	if(prefix.compare("songs/") != 0)
+		return;
+
+	std::string songName = pakPath.substr(6, pathLength - 15);
+	
+	auto elem = songNames.find(songName);
+	if (elem == songNames.end())
+		return;
+
+	auto title = elem->second.first;
+	auto artist = elem->second.second;
+
+	std::wofstream outFile("songinfo.txt", std::ios::out | std::ios::trunc);
+	outFile << title << std::endl;
+	outFile << artist << std::endl;
 }
